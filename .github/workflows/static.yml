@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามรถของบริษัท</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .update-time {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px 25px;
+            border-radius: 10px;
+            min-width: 100px;
+        }
+
+        .stat-available {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .stat-in-use {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .stat-maintenance {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .vehicles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .vehicle-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(31, 38, 135, 0.5);
+        }
+
+        .card-header {
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="2"/></svg>');
+        }
+
+        .status-available {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .status-in-use {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .status-maintenance {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .vehicle-info h3 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .vehicle-model {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            margin-top: 2px;
+            color: #7f8c8d;
+            flex-shrink: 0;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .fuel-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .fuel-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .fuel-high { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+        .fuel-medium { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .fuel-low { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .legend h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .vehicles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .legend-items {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-car"></i> ระบบติดตามรถของบริษัท</h1>
+            <div class="update-time" id="updateTime">กำลังโหลดข้อมูล...</div>
+            <button class="refresh-btn" onclick="loadVehicleData()" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> รีเฟรชข้อมูล
+            </button>
+            <div class="stats" id="stats">
+                <div class="stat-item stat-available">
+                    <div class="stat-number" id="availableCount">-</div>
+                    <div class="stat-label">ว่าง</div>
+                </div>
+                <div class="stat-item stat-in-use">
+                    <div class="stat-number" id="inUseCount">-</div>
+                    <div class="stat-label">กำลังใช้</div>
+                </div>
+                <div class="stat-item stat-maintenance">
+                    <div class="stat-number" id="maintenanceCount">-</div>
+                    <div class="stat-label">ซ่อมบำรุง</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="vehiclesContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3><i class="fas fa-info-circle"></i> คำอธิบายสถานะ</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #2ecc71, #27ae60);"></div>
+                    <span>ว่าง - พร้อมใช้งาน</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+                    <span>กำลังใช้งาน - มีผู้ใช้</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #f39c12, #e67e22);"></div>
+                    <span>ซ่อมบำรุง - อยู่ระหว่างซ่อม</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - ใส่ URL ของ Google Apps Script Web App
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyODzdebJ2GXLoH_E3dtKHvtotk0AKuVTthuUA-9fLW8eX5lOLG7xW_Quix86M8XZNQ/exec';
+        
+        // ฟังก์ชันโหลดข้อมูลจาก Google Apps Script
+        async function loadVehicleData() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const container = document.getElementById('vehiclesContainer');
+            
+            try {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังโหลด...';
+                
+                container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</div>';
+                
+                const response = await fetch(GAS_WEB_APP_URL);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                displayVehicles(data.vehicles);
+                updateStats(data.vehicles);
+                updateTime();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                container.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}
+                        <br><small>กรุณาตรวจสอบการเชื่อมต่อและ URL ของ Google Apps Script</small>
+                    </div>
+                `;
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> รีเฟรชข้อมูล';
+            }
+        }
+        
+        // ฟังก์ชันแสดงข้อมูลรถ
+        function displayVehicles(vehicles) {
+            const container = document.getElementById('vehiclesContainer');
+            
+            const vehiclesHTML = vehicles.map(vehicle => {
+                const statusClass = getStatusClass(vehicle.status);
+                const statusText = getStatusText(vehicle.status);
+                const fuelClass = getFuelClass(vehicle.fuel);
+                
+                return `
+                    <div class="vehicle-card">
+                        <div class="card-header ${statusClass}">
+                            <div class="card-title">
+                                <div class="vehicle-info">
+                                    <h3><i class="fas fa-car"></i> ${vehicle.licensePlate}</h3>
+                                    <div class="vehicle-model">${vehicle.model}</div>
+                                </div>
+                                <div class="status-badge">${statusText}</div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <i class="fas fa-user info-icon"></i>
+                                <div class="info-content">
+                                    <div class="info-label">ผู้ขับ</div>
+                                    <div class="info-value">${vehicle.driver || 'ไม่มีผู้ขับ'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <i class="fas fa-map-marker-alt info-icon"></i>
+                                <div class="info-content">
+                                    <div class="info-label">ตำแหน่ง</div>
+                                    <div class="info-value">${vehicle.location}</div>
+                                </div>
+                            </div>
+                            
+                            ${vehicle.status === 'in-use' && vehicle.startTime ? `
+                                <div class="info-row">
+                                    <i class="fas fa-clock info-icon"></i>
+                                    <div class="info-content">
+                                        <div class="info-label">เวลาใช้งาน</div>
+                                        <div class="info-value">${vehicle.startTime} - ${vehicle.estimatedReturn || 'ไม่ระบุ'}</div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${vehicle.purpose ? `
+                                <div class="info-row">
+                                    <i class="fas fa-clipboard-list info-icon"></i>
+                                    <div class="info-content">
+                                        <div class="info-label">วัตถุประสงค์</div>
+                                        <div class="info-value">${vehicle.purpose}</div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="info-row">
+                                <i class="fas fa-gas-pump info-icon"></i>
+                                <div class="info-content">
+                                    <div class="info-label">ระดับน้ำมัน</div>
+                                    <div class="info-value">${vehicle.fuel}%</div>
+                                    <div class="fuel-bar">
+                                        <div class="fuel-fill ${fuelClass}" style="width: ${vehicle.fuel}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `<div class="vehicles-grid">${vehiclesHTML}</div>`;
+        }
+        
+        // ฟังก์ชันอัพเดทสถิติ
+        function updateStats(vehicles) {
+            const availableCount = vehicles.filter(v => v.status === 'available').length;
+            const inUseCount = vehicles.filter(v => v.status === 'in-use').length;
+            const maintenanceCount = vehicles.filter(v => v.status === 'maintenance').length;
+            
+            document.getElementById('availableCount').textContent = availableCount;
+            document.getElementById('inUseCount').textContent = inUseCount;
+            document.getElementById('maintenanceCount').textContent = maintenanceCount;
+        }
+        
+        // ฟังก์ชันอัพเดทเวลา
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('updateTime').textContent = `อัพเดทล่าสุด: ${timeString}`;
+        }
+        
+        // Helper functions
+        function getStatusClass(status) {
+            switch (status) {
+                case 'available': return 'status-available';
+                case 'in-use': return 'status-in-use';
+                case 'maintenance': return 'status-maintenance';
+                default: return 'status-available';
+            }
+        }
+        
+        function getStatusText(status) {
+            switch (status) {
+                case 'available': return 'ว่าง';
+                case 'in-use': return 'กำลังใช้งาน';
+                case 'maintenance': return 'ซ่อมบำรุง';
+                default: return 'ไม่ทราบ';
+            }
+        }
+        
+        function getFuelClass(fuel) {
+            if (fuel > 70) return 'fuel-high';
+            if (fuel > 30) return 'fuel-medium';
+            return 'fuel-low';
+        }
+        
+        // Auto refresh every 30 seconds
+        setInterval(loadVehicleData, 30000);
+        
+        // Load data when page loads
+        window.onload = function() {
+            loadVehicleData();
+        };
+    </script>
+</body>
+</html>
